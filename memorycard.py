@@ -1,192 +1,153 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
-        QApplication, QWidget, 
-        QHBoxLayout, QVBoxLayout, 
-        QGroupBox, QButtonGroup, QRadioButton,  
-        QPushButton, QLabel)
-from random import shuffle
-
-
-class Question():
-    def __init__(self, question, right_answer, wrong1, wrong2, wrong3):
-        # all the lines must be given when creating the object, and will be recorded as properties
-        self.question = question
-        self.right_answer = right_answer
-        self.wrong1 = wrong1
-        self.wrong2 = wrong2
-        self.wrong3 = wrong3
-
-
-questions_list = [] 
-questions_list.append(Question('The state language of Brazil', 'Portuguese', 'English', 'Spanish', 'Brazilian'))
-questions_list.append(Question('Which color does not appear on the American flag?', 'Green', 'Red', 'White', 'Blue'))
-questions_list.append(Question('A traditional residence of the Yakut people', 'Urasa', 'Yurt', 'Igloo', 'Hut'))
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QListWidget, QLineEdit, QTextEdit, QInputDialog, QHBoxLayout, QVBoxLayout, QFormLayout
 
 
 app = QApplication([])
+notes = []
 
 
-btn_OK = QPushButton('Answer') # answer button
-lb_Question = QLabel('The most difficult question in the world!') # question text
+##App interface
+#app window parameters
+notes_win = QWidget()
+notes_win.setWindowTitle('Smart Notes')
+notes_win.resize(900, 600)
 
 
-RadioGroupBox = QGroupBox("Answer options") # on-screen group for radio buttons with answers
+#app window widgets
+list_notes = QListWidget()
+list_notes_label = QLabel('List of notes')
 
 
-rbtn_1 = QRadioButton('Option 1')
-rbtn_2 = QRadioButton('Option 2')
-rbtn_3 = QRadioButton('Option 3')
-rbtn_4 = QRadioButton('Option 4')
+button_note_create = QPushButton('Create note') #a window with field "Enter note name" appears
+button_note_del = QPushButton('Delete note')
+button_note_save = QPushButton('Save note')
 
 
-RadioGroup = QButtonGroup() # this groups the radio buttons so we can control their behavior
-RadioGroup.addButton(rbtn_1)
-RadioGroup.addButton(rbtn_2)
-RadioGroup.addButton(rbtn_3)
-RadioGroup.addButton(rbtn_4)
+field_tag = QLineEdit('')
+field_tag.setPlaceholderText('Enter tag...')
+field_text = QTextEdit()
+button_tag_add = QPushButton('Add to note')
+button_tag_del = QPushButton('Unpin from note')
+button_tag_search = QPushButton('Search notes by tag')
+list_tags = QListWidget()
+list_tags_label = QLabel('List of tags')
 
 
-layout_ans1 = QHBoxLayout()   
-layout_ans2 = QVBoxLayout() # the vertical ones will be inside the horizontal one 
-layout_ans3 = QVBoxLayout()
-layout_ans2.addWidget(rbtn_1) # two answers in the first column
-layout_ans2.addWidget(rbtn_2)
-layout_ans3.addWidget(rbtn_3) # two answers in the second column
-layout_ans3.addWidget(rbtn_4)
+#arrangement of widgets by layouts
+layout_notes = QHBoxLayout()
+col_1 = QVBoxLayout()
+col_1.addWidget(field_text)
 
 
-layout_ans1.addLayout(layout_ans2)
-layout_ans1.addLayout(layout_ans3) # put the columns in the same line
+col_2 = QVBoxLayout()
+col_2.addWidget(list_notes_label)
+col_2.addWidget(list_notes)
+row_1 = QHBoxLayout()
+row_1.addWidget(button_note_create)
+row_1.addWidget(button_note_del)
+row_2 = QHBoxLayout()
+row_2.addWidget(button_note_save)
+col_2.addLayout(row_1)
+col_2.addLayout(row_2)
 
 
-RadioGroupBox.setLayout(layout_ans1) # a “panel” with the answer options is ready 
+col_2.addWidget(list_tags_label)
+col_2.addWidget(list_tags)
+col_2.addWidget(field_tag)
+row_3 = QHBoxLayout()
+row_3.addWidget(button_tag_add)
+row_3.addWidget(button_tag_del)
+row_4 = QHBoxLayout()
+row_4.addWidget(button_tag_search)
 
 
-AnsGroupBox = QGroupBox("Test result")
-lb_Result = QLabel('Are you correct or not?') # “correct” or “incorrect” will be written here
-lb_Correct = QLabel('The answer will be here!') # the correct answer text will be written here
+col_2.addLayout(row_3)
+col_2.addLayout(row_4)
 
 
-layout_res = QVBoxLayout()
-layout_res.addWidget(lb_Result, alignment=(Qt.AlignLeft | Qt.AlignTop))
-layout_res.addWidget(lb_Correct, alignment=Qt.AlignHCenter, stretch=2)
-AnsGroupBox.setLayout(layout_res)
+layout_notes.addLayout(col_1, stretch = 100)
+layout_notes.addLayout(col_2, stretch = 1)
+notes_win.setLayout(layout_notes)
 
 
-layout_line1 = QHBoxLayout() # question
-layout_line2 = QHBoxLayout() # answer options or test result
-layout_line3 = QHBoxLayout() # "Answer" button
+#impApp functionality
+def show_note():
+    key = list_notes.selectedItems()[0].text()
+    print(key)
+    for note in notes:
+        if note[0] == key:
+            field_text.setText(note[1])
+            list_tags.clear()
+            list_tags.addItems(note[2])
 
 
-layout_line1.addWidget(lb_Question, alignment=(Qt.AlignHCenter | Qt.AlignVCenter))
-layout_line2.addWidget(RadioGroupBox)   
-layout_line2.addWidget(AnsGroupBox)  
-AnsGroupBox.hide() # hide the answer panel because the question panel should be visible first 
+def add_note():
+    note_name, ok = QInputDialog.getText(notes_win, "Add note", "Note name: ")
+    if ok and note_name != "":
+        note = list()
+        note = [note_name, '', []]
+        notes.append(note)
+        list_notes.addItem(note[0])
+        list_tags.addItems(note[2])
+        print(notes)
+        with open(str(len(notes)-1)+".txt", "w") as file:
+            file.write(note[0]+'\n')
 
 
-layout_line3.addStretch(1)
-layout_line3.addWidget(btn_OK, stretch=2) # the button must be large
-layout_line3.addStretch(1)
-
-
-layout_card = QVBoxLayout()
-
-
-layout_card.addLayout(layout_line1, stretch=2)
-layout_card.addLayout(layout_line2, stretch=8)
-layout_card.addStretch(1)
-layout_card.addLayout(layout_line3, stretch=1)
-layout_card.addStretch(1)
-layout_card.setSpacing(5) # spaces between the contents
-
-
-def show_result():
-    ''' Show the answer panel. '''
-    RadioGroupBox.hide()
-    AnsGroupBox.show()
-    btn_OK.setText('Next question')
-
-
-def show_question():
-    ''' Show the question panel. '''
-    RadioGroupBox.show()
-    AnsGroupBox.hide()
-    btn_OK.setText('Answer')
-    # clear selected radio button
-    RadioGroup.setExclusive(False) # remove the limits so we can reset the radio buttons 
-    rbtn_1.setChecked(False)
-    rbtn_2.setChecked(False)
-    rbtn_3.setChecked(False)
-    rbtn_4.setChecked(False)
-    RadioGroup.setExclusive(True) # reset the limits so that only one radio button can be selected at a time 
-
-
-answers = [rbtn_1, rbtn_2, rbtn_3, rbtn_4]
-
-
-def ask(q: Question):
-    ''' This function writes the value of the question and answers in the corresponding widgets. The answer options are distributed randomly. '''
-    shuffle(answers) # shuffle the list of buttons; now a random button is first in the list
-    answers[0].setText(q.right_answer) # fill the first element of the list with the correct answer and the other elements with incorrect answers
-    answers[1].setText(q.wrong1)
-    answers[2].setText(q.wrong2)
-    answers[3].setText(q.wrong3)
-    lb_Question.setText(q.question) # question
-    lb_Correct.setText(q.right_answer) # answer
-    show_question() # show the question panel 
-
-
-def show_correct(res):
-    ''' Show the result - put the text that was passed to this function into the “result” label and show the relevant panel. '''
-    lb_Result.setText(res)
-    show_result()
-
-
-def check_answer():
-    ''' If one of the answer options is selected, check it and show the answer panel. '''
-    if answers[0].isChecked():
-        # a correct answer!
-        show_correct('Correct!')
+def save_note():
+    if list_notes.selectedItems():
+        key = list_notes.selectedItems()[0].text()
+        index = 0
+        for note in notes:
+            if note[0] == key:
+                note[1] = field_text.toPlainText()
+                with open(str(index)+".txt", "w") as file:
+                    file.write(note[0]+'\n')
+                    file.write(note[1]+'\n')
+                    for tag in note[2]:
+                        file.write(tag+' ')
+                    file.write('\n')
+            index += 1
+        print(notes)
     else:
-        if answers[1].isChecked() or answers[2].isChecked() or answers[3].isChecked():
-            # an incorrect answer!
-            show_correct('Incorrect!')
+        print("Note to save is not selected!")
 
 
-def next_question():
-    ''' Asks the next question in the list. '''
-    # this function needs a variable that gives the number of the current question 
-    # this variable can be made global, or it can be the property of a “global object” (app or window)
-    # we will create the property window.cur_question (below)
-    window.cur_question = window.cur_question + 1 # move on to the next question 
-    if window.cur_question >= len(questions_list):
-        window.cur_question = 0 # if the list of questions has ended, start over 
-    q = questions_list[window.cur_question] # take a question
-    ask(q) # ask it
+#event handling
+list_notes.itemClicked.connect(show_note)
+button_note_create.clicked.connect(add_note)
+button_note_save.clicked.connect(save_note)
 
 
-def click_OK():
-    ''' This determines whether to show another question or check the answer to this question. '''
-    if btn_OK.text() == 'Answer':
-        check_answer() # check the answer
-    else:
-        next_question() # next question
+#app startup 
+notes_win.show()
 
 
-window = QWidget()
-window.setLayout(layout_card)
-window.setWindowTitle('Memo Card')
-# Make the current question from the list a property of the “window” object. That way, we can easily change its functions:
-window.cur_question = -1    # ideally, variables like this one should be properties 
-                            # we’d have to write a class whose instances have these properties,
-                            # but Python allows us to create a property for a single instance 
+name = 0
+note = []
+while True:
+    filename = str(name)+".txt"
+    try:
+        with open(filename, "r", encoding='utf-8') as file:
+            for line in file:
+                line = line.replace('\n', '')
+                note.append(line)
+        tags = note[2].split(' ')
+        note[2] = tags
+        
+        notes.append(note)
+        note = []
+        name += 1
 
 
-btn_OK.clicked.connect(click_OK) # when a button is clicked, we choose what exactly happens 
+    except IOError:
+        break
 
 
-# Everything is set up. Now we ask the question and show the window:
-next_question()
-window.resize(400, 300)
-window.show()
-app.exec()
+print(notes)
+for note in notes:
+    list_notes.addItem(note[0])
+
+
+app.exec_()
+
